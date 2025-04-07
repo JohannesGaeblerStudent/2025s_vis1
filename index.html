@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Vis1</title>
+
+    <link rel="stylesheet" type="text/css" href="style.css">
+
+    <!-- include THREE.js -->
+    <script src="three.js/build/three.js"></script>
+
+    <!-- include d3.js -->
+    <script src="d3.js/d3.v7.js"></script>
+
+    <!-- include Vis1 script -->
+    <script src="js/shader.js"></script>
+    <script src="js/testShader.js"></script>
+    <script src="js/volume.js"></script>
+    <script src="js/camera.js"></script>
+    <script src="js/vis1.js"></script>
+
+</head>
+
+<!-- call init function when page has loaded -->
+<body onload="init()">
+
+<h1>Vis1 Exercise</h1>
+<h2>Your names here</h2>
+
+<!-- data selector -->
+<p>Select your data here: <input id="upload" type="file"></p>
+
+<div class="container">
+
+    <!-- volume rendering container -->
+    <div id="viewContainer"></div>
+
+    <!-- container for interactive transfer function -->
+    <div id="tfContainer"></div>
+
+</div>
+
+
+
+</body>
+</html>

@@ -1,0 +1,29 @@
+/*
+* Vis 1 Task 1 Framework
+* Copyright (C) TU Wien
+*   Institute of Visual Computing and Human-Centered Technology
+*   Research Unit of Computer Graphics
+* Maintenance:
+*   2021: Manuela Waldner
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are not permitted.
+* 
+* Sets one of two colors for a fragment, depending on colorIdx. 
+*/
+#ifndef GL_ES
+#version 330 es
+#endif
+
+precision highp int;
+precision highp float;
+
+uniform vec3 color[2];
+uniform int colorIdx;
+
+out vec4 fragColor;
+
+void main() {
+    fragColor = vec4(color[colorIdx], 1.0);
+}

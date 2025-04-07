@@ -1,0 +1,19 @@
+/*
+* Vis 1 Task 1 Framework
+* Copyright (C) TU Wien
+*   Institute of Visual Computing and Human-Centered Technology
+*   Research Unit of Computer Graphics
+* Maintenance:
+*   2021: Manuela Waldner
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without
+* modification, are not permitted.
+*/
+#ifndef GL_ES
+#version 330 es
+#endif
+
+void main() {
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
+}
