@@ -1,0 +1,37 @@
+#ifndef GL_ES
+#version 330 es
+#endif
+
+// TODO: Just a placeholder for now
+
+precision highp int;
+precision highp float;
+precision highp sampler3D;
+
+in vec3 fragPosition;
+out vec4 fragColor;
+
+uniform vec3 color;
+uniform sampler3D volumeTexture;
+uniform int maxSteps;
+uniform float stepSize;
+uniform float opacityThreshold;
+
+vec4 rayMarch(vec3 startPos, vec3 direction) {
+
+    // TODO: Implement
+
+    // Uncomment to debug:
+    return vec4(direction, 1.0);
+    // return vec4(cameraPosition, 1.0);
+    // return vec4(fragPosition, 1.0);
+}
+
+void main() {
+
+    // TODO: Probably incorrect
+
+    vec3 rayDirection = normalize(fragPosition - cameraPosition); // cam to frag direction
+    fragColor = rayMarch(fragPosition, rayDirection);
+    fragColor.a = 1.0;
+}

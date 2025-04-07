@@ -19,7 +19,9 @@ let canvasWidth, canvasHeight = 0;
 let container = null;
 let volume = null;
 let fileInput = null;
-let testShader = null;
+
+let volumeTexture = null;
+let volumeShader = null;
 
 /**
  * Load all data and initialize UI here.
@@ -38,9 +40,6 @@ function init() {
     // read and parse volume file
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
-
-    // dummy shader gets a color as input
-    testShader = new TestShader([255.0, 255.0, 0.0]);
 }
 
 /**
@@ -60,26 +59,54 @@ function readFile(){
 }
 
 /**
- * Construct the THREE.js scene and update histogram when a new volume is loaded by the user.
- *
- * Currently renders the bounding box of the volume.
+ * Creates a 3D texture based on the volume data loaded.
+ */
+function createVolumeTexture() {
+
+    // TODO: No idea if the texture created here is actually correct, I just put this in quickly
+
+    volumeTexture = new THREE.Data3DTexture(volume.voxels, volume.width, volume.height, volume.depth);
+    volumeTexture.needsUpdate = true;
+
+    console.log("Volume texture: data: " + volumeTexture.image);
+}
+
+/**
+ * Creates a new volume shader based on the volume texture.
+ */
+async function createVolumeShader() {
+
+    // TODO: Do we need to make those parameters dynamically changeable in the UI?
+
+    volumeShader = new VolumeShader(
+        volumeTexture,          // 3D texture
+        [1.0, 1.0, 1.0], // Color
+        1,            // Step size
+        100,          // Max steps
+        0.95   // Opacity threshold
+    );
+    await volumeShader.load();
+}
+
+/**
+ * Construct the THREE.js scene and update histogram when a new volume is loaded.
  */
 async function resetVis(){
-    // create new empty scene and perspective camera
+    // Create new scene and camera
     scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera( 75, canvasWidth / canvasHeight, 0.1, 1000 );
+    camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
 
-    // dummy scene: we render a box and attach our color test shader as material
-    const testCube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
-    const testMaterial = testShader.material;
-    await testShader.load(); // this function needs to be called explicitly, and only works within an async function!
-    const testMesh = new THREE.Mesh(testCube, testMaterial);
-    scene.add(testMesh);
+    createVolumeTexture();
+    await createVolumeShader();
 
-    // our camera orbits around an object centered at (0,0,0)
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0,0,0), 2*volume.max, renderer.domElement);
+    const cube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
+    const mesh = new THREE.Mesh(cube, volumeShader.material);
+    scene.add(mesh);
 
-    // init paint loop
+    // Orbit camera around center of the volume
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2 * volume.max, renderer.domElement);
+
+    // Start rendering loop
     requestAnimationFrame(paint);
 }
 

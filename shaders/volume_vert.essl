@@ -1,0 +1,12 @@
+#ifndef GL_ES
+#version 330 es
+#endif
+
+out vec3 fragPosition;
+
+// TODO: Might be incomplete, no idea!
+
+void main() {
+    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
+    fragPosition = vec3(gl_Position.x, gl_Position.y, gl_Position.z);
+}
