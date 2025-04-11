@@ -17,8 +17,8 @@ uniform int maxSteps;
 uniform float stepSize;
 uniform float opacityThreshold;
 
-bool invertColor = false;
-float alphaScale = 0.5f;
+bool invertColor = true;
+float alphaScale = 1.0f;
 
 float sampleData(vec3 coord) {
   return texture(volumeTexture, coord).x;
@@ -75,8 +75,9 @@ vec4 compose(vec4 color, vec3 entryPoint, vec3 rayDir, float samples, float tSta
 void main() {
   // Determine the intersection of the ray and the box.
   vec3 rayDir = normalize(vDirection);
-  vec3 aabbmin = vec3(-0.5);
-  vec3 aabbmax = vec3(0.5);
+  ivec3 texSize = textureSize(volumeTexture, 0);
+  vec3 aabbmin = vec3(texSize.x, texSize.y, texSize.z) / -2.0f;
+  vec3 aabbmax = vec3(texSize.x, texSize.y, texSize.z) /  2.0f;
   vec2 intersection = intersectAABB(vOrigin, rayDir, aabbmin, aabbmax);
 
   // Initialize the fragment color.
