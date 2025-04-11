@@ -2,11 +2,13 @@
 #version 330 es
 #endif
 
-out vec3 fragPosition;
-
-// TODO: Might be incomplete, no idea!
+out vec3 vOrigin;
+out vec3 vDirection;
 
 void main() {
-    gl_Position = projectionMatrix * viewMatrix * modelMatrix * vec4(position, 1);
-    fragPosition = vec3(gl_Position.x, gl_Position.y, gl_Position.z);
+
+  vOrigin = vec3(inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz;
+  vDirection = position - vOrigin;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+
 }
