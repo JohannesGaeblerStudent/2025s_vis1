@@ -2,13 +2,16 @@
 #version 330 es
 #endif
 
-out vec3 vOrigin;
-out vec3 vDirection;
+// Output.
+out vec3 vOrigin; // Output ray origin.
+out vec3 vDirection;  // Output ray direction.
 
 void main() {
-
+  // Compute the ray origin in model space.
   vOrigin = vec3(inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz;
+  // Compute ray direction in model space.
   vDirection = position - vOrigin;
-  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 
+  // Compute vertex position in clip space.
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
 }

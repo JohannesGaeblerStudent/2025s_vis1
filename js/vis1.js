@@ -40,6 +40,8 @@ function init() {
     // read and parse volume file
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
+
+
 }
 
 /**
@@ -62,39 +64,24 @@ function readFile(){
  * Creates a 3D texture based on the volume data loaded.
  */
 function createVolumeTexture() {
-
-    // TODO: No idea if the texture created here is actually correct, I just put this in quickly
-
     volumeTexture = new THREE.Data3DTexture(
         volume.voxels,
         volume.width,
         volume.height,
         volume.depth
     );
+
+    volumeTexture.format = THREE.RedFormat;
+    volumeTexture.type = THREE.FloatType;
+    volumeTexture.minFilter = THREE.LinearFilter;
+    volumeTexture.magFilter = THREE.LinearFilter;
+
+    // Repeat edge values when sampling outside of texture boundaries.
+    volumeTexture.wrapS = THREE.ClampToEdgeWrapping;
+    volumeTexture.wrapT = THREE.ClampToEdgeWrapping;
+    volumeTexture.wrapR = THREE.ClampToEdgeWrapping;
+
     volumeTexture.needsUpdate = true;
-}
-
-/**
- * Creates a new volume shader based on the volume texture.
- */
-async function createVolumeShader() {
-
-    // TODO: Do we need to make those parameters dynamically changeable in the UI?
-    // Create wireframe box to visualize volume bounds
-    const wireframe = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
-        new THREE.LineBasicMaterial({ color: 0x00ff00 })
-    );
-    scene.add(wireframe);
-
-    volumeShader = new VolumeShader(
-        volumeTexture,
-        [1.0, 1.0, 1.0], // Color
-        1,             // Smaller step size for better quality
-        200,             // Max steps
-        0.1              // Lower threshold to see more data
-    );
-    await volumeShader.load();
 }
 
 function createPointCloudFromVolume(volume) {
@@ -127,14 +114,32 @@ async function resetVis(){
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
 
-    createPointCloudFromVolume(volume);
-
     createVolumeTexture();
-    await createVolumeShader();
+    volumeShader = new VolumeShader(
+        volumeTexture,
+        [1.0, 1.0, 1.0], // Color
+        1,
+        1,
+        false,
+        volume.width,
+        volume.height,
+        volume.depth
+    );
 
-    const cube = new THREE.BoxGeometry(volume.width, volume.height, volume.depth);
-    const mesh = new THREE.Mesh(cube, volumeShader.material);
-    mesh.material.side = THREE.BackSide;
+    // createPointCloudFromVolume(volume);
+    const wireframe = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
+        new THREE.LineBasicMaterial({ color: 0x00ff00 })
+    );
+    scene.add(wireframe);
+
+    const geometry = new THREE.BoxGeometry(volume.width,volume.height,volume.depth);
+    const mesh = new THREE.Mesh(geometry);
+    mesh.position.set(0, 0,0);
+
+    const material = volumeShader.material;
+    await volumeShader.load();
+    mesh.material = material;
     scene.add(mesh);
 
     // Orbit camera around center of the volume
