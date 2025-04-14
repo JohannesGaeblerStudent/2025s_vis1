@@ -22,6 +22,7 @@ let fileInput = null;
 
 let volumeTexture = null;
 let volumeShader = null;
+let volumeContext = null;
 
 /**
  * Load all data and initialize UI here.
@@ -84,28 +85,6 @@ function createVolumeTexture() {
     volumeTexture.needsUpdate = true;
 }
 
-function createPointCloudFromVolume(volume) {
-    const positions = [];
-    for (let z = 0; z < volume.depth; z++) {
-        for (let y = 0; y < volume.height; y++) {
-            for (let x = 0; x < volume.width; x++) {
-                const i = x + y * volume.width + z * volume.width * volume.height;
-                const value = volume.voxels[i];
-                if (value > 0) { // or any threshold
-                    positions.push(x, y, z);
-                }
-            }
-        }
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-
-    const material = new THREE.PointsMaterial({ size: 0.5, color: 0xffffff });
-    const points = new THREE.Points(geometry, material);
-    scene.add(points);
-}
-
 /**
  * Construct the THREE.js scene and update histogram when a new volume is loaded.
  */
@@ -114,33 +93,42 @@ async function resetVis(){
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
 
+    // Create volume and context
     createVolumeTexture();
     volumeShader = new VolumeShader(
         volumeTexture,
-        [1.0, 1.0, 1.0], // Color
         1,
-        1,
-        false,
         volume.width,
         volume.height,
         volume.depth
     );
+    await volumeShader.load();
+    volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
 
-    // createPointCloudFromVolume(volume);
-    const wireframe = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
-        new THREE.LineBasicMaterial({ color: 0x00ff00 })
-    );
-    scene.add(wireframe);
+    // ====================================
+    // TODO: Remove this once the UI works:
+    volumeContext.setDensityThreshold(0.4, 0.8);
+    for (let i = 0; i <= 10; i++) {
+        const step = i / 10;
+        volumeContext.setColorStep(i, step, new THREE.Color(step, 1.0 - step, 1.0 - step));
+    }
+    volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
+    // ====================================
 
     const geometry = new THREE.BoxGeometry(volume.width,volume.height,volume.depth);
     const mesh = new THREE.Mesh(geometry);
     mesh.position.set(0, 0,0);
-
-    const material = volumeShader.material;
-    await volumeShader.load();
-    mesh.material = material;
+    mesh.material = volumeContext.material;
     scene.add(mesh);
+
+    // =================================================
+    // TODO: Make wireframe toggle-able in UI or remove?
+    const wireframe = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
+        new THREE.LineBasicMaterial({ color: new THREE.Color(0.4, 0.4, 0.4) })
+    );
+    scene.add(wireframe);
+    // =================================================
 
     // Orbit camera around center of the volume
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2 * volume.max, renderer.domElement);

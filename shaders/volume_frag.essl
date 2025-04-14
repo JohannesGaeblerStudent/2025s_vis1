@@ -10,42 +10,16 @@ const int COLOR_MAX_COUNT = 10;
 uniform sampler3D volumeTexture;
 uniform float stepSize;
 uniform vec3 size;
-
-
-// ================
-// TODO: UI binding, all of these should be uniforms
-
-// TODO: Convert this to a uniform based on the UI:
-// Sets the min and max density to display.
-vec2 densityThreshold = vec2(0.33, 0.67);
-
-// TODO: Pass from UI, note that we can have at max COLOR_MAX_COUNT different color steps:
-// Marks the thresholds for each color. Must be ordered in ascending
-// order. One position (0...1) corresponds to one color (r,g,b,a).
-float colorDefinitionPositions[COLOR_MAX_COUNT];
-vec4 colorDefinitionColors[COLOR_MAX_COUNT];
-
-// TODO: If we want, we could set this in the UI as well
-// The "background" color
-vec4 offColor = vec4(0.5);
-// ================
-
+uniform vec2 densityThreshold; // Min and max density to display
+uniform float colorDefinitionsDensity[COLOR_MAX_COUNT]; // Thresholds for each color, must be ordered in ascending order, [0...1]
+uniform vec4 colorDefinitionsColor[COLOR_MAX_COUNT]; // Colors for density threshold
+uniform vec4 offColor; // The "background" color within the box
 
 in vec3 vOrigin;
 in vec3 vDirection;
 in vec3 vCameraPosition;
 
 out vec4 frag_color;
-
-
-void temp_createColorArray() {
-  // TODO: Remove once UI binding is implemented
-  for (int i = 0; i < COLOR_MAX_COUNT; i++) {
-    float step = float(i) / float(COLOR_MAX_COUNT);
-    colorDefinitionPositions[i] = step;
-    colorDefinitionColors[i] = vec4(step, step / 2.0, 1.0 - step, 1.0);
-  }
-}
 
 
 float sampleData(vec3 coord) {
@@ -55,9 +29,11 @@ float sampleData(vec3 coord) {
 vec4 sampleColor(float density) {
   // Note: Color steps must be ordered 0->1 in
   // order for this to sample the correct color!
+  // TODO: Would be pretty easy to do a gradient here
   for (int i = COLOR_MAX_COUNT - 1; i >= 0; i--) {
-    if (density >= colorDefinitionPositions[i]) {
-      return colorDefinitionColors[i];
+    float thr = colorDefinitionsDensity[i];
+    if (thr >= 0.0 && density >= thr) {
+      return colorDefinitionsColor[i];
     }
   }
   return offColor;
@@ -76,7 +52,6 @@ vec2 intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
 }
 
 vec4 sampleAlongRay(vec3 entryPoint, vec3 direction, float rayStep, float boxStart, float boxEnd, float sampleCount) {
-
   // Loop through all samples along the ray, sample the density using max intensity projection.
   float density = 0.0;
   for (float i = 0.0; i < sampleCount; i += 1.0) {
@@ -102,8 +77,6 @@ vec4 sampleAlongRay(vec3 entryPoint, vec3 direction, float rayStep, float boxSta
 }
 
 void main() {
-  temp_createColorArray();
-
   // Intersection ray and box
   vec3 direction = normalize(vDirection); // Direction of ray
   vec3 minAABB = -0.5 * size;
