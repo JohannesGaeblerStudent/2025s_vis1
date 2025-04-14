@@ -24,6 +24,10 @@ let volumeTexture = null;
 let volumeShader = null;
 let volumeContext = null;
 
+//UI Elements
+var invertColor = false;
+var color = [1.0, 1.0, 1.0];
+
 /**
  * Load all data and initialize UI here.
  */
