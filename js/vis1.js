@@ -24,8 +24,12 @@ let volumeTexture = null;
 let volumeShader = null;
 let volumeContext = null;
 
+let geometry = null;
+let mesh = null;
+let wireframe = null;
+
 //UI Elements
-var invertColor = false;
+var addWireframe = false;
 var color = [1.0, 1.0, 1.0];
 
 /**
@@ -46,7 +50,6 @@ function init() {
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
 
-
 }
 
 /**
@@ -59,6 +62,14 @@ function readFile(){
 
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
+
+        geometry = new THREE.BoxGeometry(volume.width,volume.height,volume.depth);
+        mesh = new THREE.Mesh(geometry);
+
+        wireframe = new THREE.LineSegments(
+            new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
+            new THREE.LineBasicMaterial({ color: new THREE.Color(0, 1, 0) })
+        );
 
         resetVis();
     };
@@ -89,16 +100,8 @@ function createVolumeTexture() {
     volumeTexture.needsUpdate = true;
 }
 
-/**
- * Construct the THREE.js scene and update histogram when a new volume is loaded.
- */
-async function resetVis(){
-    // Create new scene and camera
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
-
+async function createVolumeShader(){
     // Create volume and context
-    createVolumeTexture();
     volumeShader = new VolumeShader(
         volumeTexture,
         1,
@@ -109,7 +112,6 @@ async function resetVis(){
     await volumeShader.load();
     volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
 
-    // ====================================
     // TODO: Remove this once the UI works:
     volumeContext.setDensityThreshold(0.4, 0.8);
     for (let i = 0; i <= 10; i++) {
@@ -119,20 +121,29 @@ async function resetVis(){
     volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
     // ====================================
 
-    const geometry = new THREE.BoxGeometry(volume.width,volume.height,volume.depth);
-    const mesh = new THREE.Mesh(geometry);
-    mesh.position.set(0, 0,0);
     mesh.material = volumeContext.material;
-    scene.add(mesh);
 
     // =================================================
-    // TODO: Make wireframe toggle-able in UI or remove?
-    const wireframe = new THREE.LineSegments(
-        new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
-        new THREE.LineBasicMaterial({ color: new THREE.Color(0.4, 0.4, 0.4) })
-    );
-    scene.add(wireframe);
+    if(addWireframe){
+        scene.add(wireframe);
+    }else{
+        scene.remove(wireframe);
+    }
     // =================================================
+}
+
+/**
+ * Construct the THREE.js scene and update histogram when a new volume is loaded.
+ */
+async function resetVis(){
+    // Create new scene and camera
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
+
+    createVolumeTexture();
+    await createVolumeShader();
+
+    scene.add(mesh);
 
     // Orbit camera around center of the volume
     orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2 * volume.max, renderer.domElement);
