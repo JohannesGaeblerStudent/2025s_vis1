@@ -19,6 +19,7 @@
     <script src="js/volume.js"></script>
     <script src="js/camera.js"></script>
     <script src="js/vis1.js"></script>
+    <script src="js/ui.js"></script>
 
 </head>
 
@@ -37,11 +38,25 @@
     <div id="viewContainer"></div>
 
     <!-- container for interactive transfer function -->
-    <div id="tfContainer"></div>
+    <div id="tfContainer">
+        <div class="GUI">
+            <h2>GUI</h2>
+            <div class="container" >
+                <label>
+                    Color:
+                    <input type="color" value="#000000" id="colorPicker">
+                </label>
+            </div>
+            <div class="container" >
+                <label>
+                    <input type="checkbox" id="invertToggle" checked>
+                    Invert color
+                </label>
+            </div>
+        </div>
+    </div>
 
 </div>
-
-
 
 </body>
 </html>

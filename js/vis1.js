@@ -23,6 +23,10 @@ let fileInput = null;
 let volumeTexture = null;
 let volumeShader = null;
 
+//UI Elements
+var invertColor = false;
+var color = [1.0, 1.0, 1.0];
+
 /**
  * Load all data and initialize UI here.
  */
@@ -114,13 +118,16 @@ async function resetVis(){
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
 
+    console.log(invertColor);
+    console.log(color);
+
     createVolumeTexture();
     volumeShader = new VolumeShader(
         volumeTexture,
-        [1.0, 1.0, 1.0], // Color
+        color, // Color
         1,
         1,
-        false,
+        invertColor,
         volume.width,
         volume.height,
         volume.depth

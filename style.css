@@ -21,6 +21,19 @@ body {
     flex: 1;
 }
 
+.GUI{
+    display: flex;
+    flex-direction: column;
+    padding: 2em;
+    margin: 0em 5em;
+    height: 50em;
+    border: 1px solid white;
+}
+
+.GUI .container{
+    margin-top: 1em;
+}
+
 .dot{
     height: 5px;
     width: 5px;
