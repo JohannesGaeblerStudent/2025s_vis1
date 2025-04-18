@@ -31,6 +31,8 @@ let wireframe = null;
 //UI Elements
 var addWireframe = false;
 var color = [1.0, 1.0, 1.0];
+var densityMin = 0.0;
+var densityMax = 1.0;
 
 /**
  * Load all data and initialize UI here.
@@ -105,9 +107,9 @@ async function createVolumeShader(){
     volumeShader = new VolumeShader(
         volumeTexture,
         1,
-        volume.width,
-        volume.height,
-        volume.depth
+        new THREE.Vector3(volume.width, volume.height, volume.depth),
+        new THREE.Vector3(densityMin, densityMax),
+
     );
     await volumeShader.load();
     volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);

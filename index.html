@@ -41,20 +41,65 @@
     <!-- container for interactive transfer function -->
     <div id="tfContainer">
         <div class="GUI">
-            <h2>GUI</h2>
-            <div class="container" >
-                <label>
-                    Color:
-                    <input type="color" value="#000000" id="colorPicker">
-                </label>
+            <div class="Title">
+                <h2>GUI</h2>
             </div>
-            <div class="container" >
-                <label>
-                    <input type="checkbox" id="invertToggle" checked>
-                    Invert color
-                </label>
+                <div class="colorContainer">
+                    <div class="sliderGroup">
+                        <h3>Red</h3>
+                        <input type="range" id="redChannel" min="0.0" max="1.0" value="0.5" step="0.05" orient="vertical">
+                        <input type="number" min="0.0" max="1.0" value="0.5" step="0.05">
+                    </div>
+                    <div class="sliderGroup">
+                        <h3>Green</h3>
+                        <input type="range" id="greenChannel" min="0.0" max="1.0" value="0.5" step="0.05" orient="vertical">
+                        <input type="number" min="0.0" max="1.0" value="0.5" step="0.05">
+
+                    </div>
+                    <div class="sliderGroup">
+                        <h3>Blue</h3>
+                        <input type="range" id="blueChannel" min="0.0" max="1.0" value="0.5" step="0.05" orient="vertical">
+                        <input type="number" min="0.0" max="1.0" value="0.5" step="0.05">
+
+                    </div>
+                </div>
+            <div class="densityContainer" >
+                <div class="sliderGroup">
+                    <h3>Minimum Density</h3>
+                    <input type="range" id="densityMin" min="0.0" max="1.0" step="0.05" value="1.0">
+                    <input type="number" min="0.0" max="1.0" value="1.0" step="0.05">
+
+                </div>
+                <div class="sliderGroup">
+                    <h3>Maximum Density</h3>
+                    <input type="range" id="densityMax" min="0.0" max="1.0" step="0.05" value="1.0">
+                    <input type="number" min="0.0" max="1.0" value="1.0" step="0.05">
+
+                </div>
+            </div>
+            <div class="toggleContainer">
+                <h3>Toggle Wireframe</h3>
+                <input type="checkbox" id="wireframeToggle" checked>
             </div>
         </div>
+        <script>
+            const sliderGroups = document.querySelectorAll('.sliderGroup');
+
+            sliderGroups.forEach(group => {
+                const range = group.querySelector('input[type=range]');
+                const number = group.querySelector('input[type=number]');
+
+                // When slider moves, update number
+                range.addEventListener('input', () => {
+                    number.value = range.value;
+                });
+
+                // When number changes, update slider
+                number.addEventListener('input', () => {
+                    range.value = number.value;
+                });
+            });
+        </script>
     </div>
 
 </div>
