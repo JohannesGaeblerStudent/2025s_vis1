@@ -108,7 +108,6 @@ async function createVolumeShader(){
     volumeShader = new VolumeShader(
         volumeTexture,
         0.001,
-        // new THREE.Vector3(1,1,1),
         new THREE.Vector3(volume.width, volume.height, volume.depth),
         new THREE.Vector3(densityMin, densityMax),
 
@@ -117,10 +116,10 @@ async function createVolumeShader(){
     volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
 
     // TODO: Remove this once the UI works:
-    volumeContext.setDensityThreshold(0.4, 0.8);
+    volumeContext.setDensityThreshold(0.1, 0.9);
     for (let i = 0; i <= 10; i++) {
         const step = i / 10;
-        volumeContext.setColorStep(i, step, new THREE.Color(step, 1.0 - step, 1.0 - step));
+        volumeContext.setColorStep(i, step, new THREE.Color(step, 1.0 / step, 1.0 - step));
     }
     volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
     // ====================================
