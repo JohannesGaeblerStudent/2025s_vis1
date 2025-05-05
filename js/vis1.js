@@ -65,7 +65,8 @@ function readFile(){
         let data = new Uint16Array(reader.result);
         volume = new Volume(data);
 
-        geometry = new THREE.BoxGeometry(volume.width,volume.height,volume.depth);
+        let size = new THREE.Vector3(volume.width, volume.height, volume.depth).normalize();
+        geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
         mesh = new THREE.Mesh(geometry);
 
         wireframe = new THREE.LineSegments(
@@ -107,6 +108,7 @@ async function createVolumeShader(){
     volumeShader = new VolumeShader(
         volumeTexture,
         1,
+        // new THREE.Vector3(1,1,1),
         new THREE.Vector3(volume.width, volume.height, volume.depth),
         new THREE.Vector3(densityMin, densityMax),
 
@@ -148,7 +150,7 @@ async function resetVis(){
     scene.add(mesh);
 
     // Orbit camera around center of the volume
-    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2 * volume.max, renderer.domElement);
+    orbitCamera = new OrbitCamera(camera, new THREE.Vector3(0, 0, 0), 2, renderer.domElement);
 
     // Start rendering loop
     requestAnimationFrame(paint);

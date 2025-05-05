@@ -54,8 +54,8 @@ vec2 intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
 vec4 sampleAlongRay(vec3 entryPoint, vec3 direction, float rayStep, float boxStart, float boxEnd, float sampleCount) {
   // Loop through all samples along the ray, sample the density using max intensity projection.
   float density = 0.0;
-  for (float i = 0.0; i < sampleCount; i += 1.0) {
-    float rayDistance = boxStart + rayStep * i;
+  for (float i = 0.0; i < sampleCount; i += rayStep) {
+    float rayDistance = boxStart + i;
     vec3 samplePoint = entryPoint + direction * rayDistance;
     float value = sampleData(samplePoint);
     density = max(density, value);
@@ -67,7 +67,8 @@ vec4 sampleAlongRay(vec3 entryPoint, vec3 direction, float rayStep, float boxSta
   }
 
   vec4 color = offColor;
-  if (density >= densityThreshold.x && density <= densityThreshold.y) {
+  //if (density >= densityThreshold.x && density <= densityThreshold.y) {
+  if (density >= 0.0 && density <= 0.99) {
     vec4 densityColor = sampleColor(density);
     color.rgb = densityColor.rgb;
     color.a = densityColor.a * density;
@@ -77,35 +78,48 @@ vec4 sampleAlongRay(vec3 entryPoint, vec3 direction, float rayStep, float boxSta
 }
 
 void main() {
-  // Intersection ray and box
-  vec3 direction = normalize(vDirection); // Direction of ray
-  vec3 minAABB = -0.5 * size;
-  vec3 maxAABB =  0.5 * size;
-  vec2 intersection = intersectAABB(vOrigin, direction, minAABB, maxAABB);
 
-  // If near distance <= far distance -> intersection valid
+  vec3 rayDir = normalize(vDirection);
+  vec3 rayOrigin = vOrigin;
+
+  vec3 boxMin = -vec3(0.5);
+  vec3 boxMax =  vec3(0.5);
+  vec2 intersect = intersectAABB(rayOrigin, rayDir, boxMin, boxMax);
+
   vec4 color = offColor;
-  if (intersection.x <= intersection.y) {
-    // Clamp near intersection distance to camera clipping plane
-    intersection.x = max(intersection.x, 0.0);
+  if (intersect.x <= intersect.y) {
 
-    // Compute ray entry and exit points
-    vec3 entryPoint = vOrigin + direction * intersection.x;
-    vec3 exitPoint = vOrigin + direction * intersection.y;
+    vec3 origin = rayOrigin;
+    vec3 pBoxEntry = origin + intersect.x * rayDir;
+    vec3 pBoxExit = origin + intersect.y * rayDir;
+    float boxDist = length(pBoxExit - pBoxEntry);
 
-    // Calculate sampling rate and step size
-    vec3 texSize = vec3(textureSize(volumeTexture, 0));
-    vec3 boxSize = exitPoint - entryPoint;
-    float rayDistanceTexSpace = length(boxSize * (texSize - vec3(1.0))); // Distance to traverse through the box in texture space
-    float sampleCount = ceil(stepSize * rayDistanceTexSpace);
-    float boxEnd = length(boxSize);
-    float rayStep = boxEnd / sampleCount;
-    float boxStart = 0.5 * rayStep;
+    float rayStepDistance = 0.001;
+    float sampleCount = boxDist / rayStepDistance;
+    vec3 rayStep = vec3(rayStepDistance);
 
-    vec3 entryPointTexSpace = (entryPoint - minAABB) / (maxAABB - minAABB); // Normalize box size to texture space
-    color = sampleAlongRay(entryPointTexSpace, direction, rayStep, boxStart, boxEnd, sampleCount);
+    vec3 scale = normalize(size);
+    vec3 boxToTex = 1.0 / scale;
+
+    float density = 0.0;
+    for (float i = 0.0; i < sampleCount; i += 1.0) {
+
+      vec3 pBox = (pBoxEntry + rayDir * rayStep * i);
+      vec3 pTex = pBox * boxToTex + vec3(0.5);
+      float d = sampleData(pTex);
+
+      density = max(density, d);
+      if (density >= 1.0) {
+        break;
+      }
+    }
+
+    if (density >= densityThreshold.x && density <= densityThreshold.y) {
+      vec4 densityColor = sampleColor(density);
+      color.rgb = densityColor.rgb;
+      color.a = densityColor.a * density;
+    }
   }
 
   frag_color = color;
 }
-
