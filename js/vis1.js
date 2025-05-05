@@ -107,7 +107,7 @@ async function createVolumeShader(){
     // Create volume and context
     volumeShader = new VolumeShader(
         volumeTexture,
-        1,
+        0.001,
         // new THREE.Vector3(1,1,1),
         new THREE.Vector3(volume.width, volume.height, volume.depth),
         new THREE.Vector3(densityMin, densityMax),
