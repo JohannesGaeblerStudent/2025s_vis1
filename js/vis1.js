@@ -28,6 +28,8 @@ let geometry = null;
 let mesh = null;
 let wireframe = null;
 
+let histogram = null;
+
 //UI Elements
 var addWireframe = false;
 var color = [1.0, 1.0, 1.0];
@@ -153,6 +155,17 @@ async function resetVis(){
 
     // Start rendering loop
     requestAnimationFrame(paint);
+
+    // Update histogram when new volume is loaded
+    if (volume && volume.voxels) {
+        if (!histogram) {
+            histogram = new Histogram('#histogramContainer', volume.voxels);
+        } else {
+            histogram.updateData(volume.voxels);
+        }
+
+        histogram.render();
+    }
 }
 
 /**
