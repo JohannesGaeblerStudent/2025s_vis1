@@ -14,7 +14,8 @@ uniform vec2 densityThreshold; // Min and max density to display
 uniform float colorDefinitionsDensity[COLOR_MAX_COUNT]; // Thresholds for each color, must be ordered in ascending order, [0...1]
 uniform vec4 colorDefinitionsColor[COLOR_MAX_COUNT]; // Colors for density threshold
 uniform vec4 offColor; // The "background" color within the box
-vec4 clipPlane; // Normal vector, distance // TODO: make uniform
+
+uniform vec4 clipPlane;
 
 in vec3 vOrigin;
 in vec3 vDirection;
@@ -61,8 +62,6 @@ vec2 intersectAABB(vec3 rayOrigin, vec3 rayDir, vec3 boxMin, vec3 boxMax) {
 }
 
 void main() {
-
-  clipPlane = vec4(-1.0, -0.55, 0.75, 0.10); // TODO: remove this
 
   vec3 rayDir = normalize(vDirection);
   vec3 rayOrigin = vOrigin;

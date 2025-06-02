@@ -30,8 +30,6 @@ let wireframe = null;
 
 let histogram = null;
 
-//UI Elements
-var addWireframe = false;
 var color = [1.0, 1.0, 1.0];
 var densityMin = 0.0;
 var densityMax = 1.0;
@@ -47,19 +45,18 @@ function init() {
 
     // WebGL renderer
     renderer = new THREE.WebGLRenderer();
-    renderer.setSize( canvasWidth, canvasHeight );
-    container.appendChild( renderer.domElement );
+    renderer.setSize(canvasWidth, canvasHeight);
+    container.appendChild(renderer.domElement);
 
     // read and parse volume file
     fileInput = document.getElementById("upload");
     fileInput.addEventListener('change', readFile);
-
 }
 
 /**
  * Handles the file reader. No need to change anything here.
  */
-function readFile(){
+function readFile() {
     let reader = new FileReader();
     reader.onloadend = function () {
         console.log("data loaded: ");
@@ -73,10 +70,10 @@ function readFile(){
 
         wireframe = new THREE.LineSegments(
             new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
-            new THREE.LineBasicMaterial({ color: new THREE.Color(0, 1, 0) })
+            new THREE.LineBasicMaterial({color: new THREE.Color(0, 1, 0)})
         );
 
-        resetVis();
+        window.resetVis();
     };
     reader.readAsArrayBuffer(fileInput.files[0]);
 }
@@ -103,9 +100,11 @@ function createVolumeTexture() {
     volumeTexture.wrapR = THREE.ClampToEdgeWrapping;
 
     volumeTexture.needsUpdate = true;
+
+    window.createEditorUI();
 }
 
-async function createVolumeShader(){
+window.createVolumeShader = async function() {
     // Create volume and context
     volumeShader = new VolumeShader(
         volumeTexture,
@@ -113,6 +112,8 @@ async function createVolumeShader(){
         new THREE.Vector3(volume.width, volume.height, volume.depth),
         new THREE.Vector3(densityMin, densityMax),
 
+        //Cutting Plane
+        new THREE.Vector4(window.angleX, window.angleY, window.clipSide, window.clipOffset),
     );
     await volumeShader.load();
     volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
@@ -127,20 +128,13 @@ async function createVolumeShader(){
     // ====================================
 
     mesh.material = volumeContext.material;
-
-    // =================================================
-    if(addWireframe){
-        scene.add(wireframe);
-    }else{
-        scene.remove(wireframe);
-    }
-    // =================================================
+    requestAnimationFrame(paint);
 }
 
 /**
  * Construct the THREE.js scene and update histogram when a new volume is loaded.
  */
-async function resetVis(){
+async function resetVis() {
     // Create new scene and camera
     scene = new THREE.Scene();
     camera = new THREE.PerspectiveCamera(75, canvasWidth / canvasHeight, 0.1, 1000);
@@ -171,7 +165,7 @@ async function resetVis(){
 /**
  * Render the scene and update all necessary shader information.
  */
-function paint(){
+function paint() {
     if (volume) {
         renderer.render(scene, camera);
     }

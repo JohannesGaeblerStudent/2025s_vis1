@@ -21,63 +21,6 @@ body {
     flex: 1;
 }
 
-.GUI{
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: column;
-    padding: 2em;
-    margin: 0em 5em;
-    height: 50em;
-    border: 1px solid white;
-}
-
-.GUI .Title{
-    text-align: start;
-    width: 100%;
-    margin-left: 5em;
-}
-
-.colorContainer{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    height:200px;
-    width: 100%;
-    margin: 2em;
-}
-
-.colorContainer input[type=range][orient=vertical]{
-    writing-mode:vertical-rl;
-    direction:rtl;
-    width: 16px;
-}
-
-.densityContainer{
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
-    margin:2em;
-}
-
-.sliderGroup{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 1em;
-}
-
-.densityContainer .sliderGroup{
-    margin: 1em 5em;
-}
-
-.toggleContainer{
-    display: flex;
-    flex-direction: row;
-}
-
 .dot{
     height: 5px;
     width: 5px;
