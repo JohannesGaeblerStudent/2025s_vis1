@@ -3,8 +3,10 @@
 // 1) Define the globals (if they don't already exist)
 window.angleX = 0;
 window.angleY = 0;
-window.clipSide = -1;
+window.clipSide = 2;
 window.clipOffset = 0;
+
+let buildHistTimeout = null;
 
 // 2) Expose a function that, when called, injects the entire panel into #editor-container
 window.createEditorUI = function () {
@@ -37,6 +39,7 @@ window.createEditorUI = function () {
     select.style.backgroundColor = "#444";
     select.style.color = "#fff";
     select.innerHTML = `
+    <option value="2">None</option>
     <option value="-1.0">Above Plane</option>
     <option value="1.0">Below Plane</option>
   `;
@@ -45,9 +48,8 @@ window.createEditorUI = function () {
     select.addEventListener("change", () => {
         window.clipSide = Number(select.value);
         // If you want to re-render immediately:
-        if (typeof window.resetVis === "function") {
-            window.resetVis();
-        }
+        window.buildFilteredPoints();
+        window.createVolumeShader();
     });
 
     // Put them on the same line
@@ -66,7 +68,7 @@ window.createEditorUI = function () {
     panel.appendChild(heading);
 
     // --- D) Helper to create “Rotation X” or “Rotation Y” row
-    function makeSliderRow(axis, min, max, step) {
+    function makeSliderRow(axis) {
         // axis: "X" or "Y"
         const row = document.createElement("div");
         row.style.display = "flex";
@@ -83,10 +85,20 @@ window.createEditorUI = function () {
         // 2) <input type="range">
         const slider = document.createElement("input");
         slider.type = "range";
-        slider.min = min;
-        slider.max = max;
-        slider.step = step;
-        slider.value = "0";
+
+        if (axis === "X" || axis === "Y") {
+            // Full circle in radians:
+            slider.min  = (-Math.PI * 2).toFixed(4);   // “−3.1416”
+            slider.max  = ( Math.PI * 2).toFixed(4);   // “+3.1416”
+            slider.step = "0.01";
+            slider.value = "0";
+        } else if (axis === "W") {
+            slider.min  = "0";
+            slider.max  = "0.25";
+            slider.step = "0.01";
+            slider.value = "0";
+        }
+
         slider.style.flex = "1";
         slider.id = `slider-rot-${axis.toLowerCase()}`;
 
@@ -100,10 +112,12 @@ window.createEditorUI = function () {
             }else{
                 window.clipOffset = v;
             }
-            // If resetVis() is defined globally, call it now:
-            if (typeof window.createVolumeShader() === "function") {
-                window.createVolumeShader();
-            }
+
+            clearTimeout(buildHistTimeout);
+            buildHistTimeout = setTimeout(() => {
+                window.buildFilteredPoints();
+            }, 500);
+            window.createVolumeShader();
         });
 
         // Set initial global to 0
@@ -115,11 +129,11 @@ window.createEditorUI = function () {
     }
 
     // Append “Rotation X” row
-    panel.appendChild(makeSliderRow("X", "-1",  "1", "0.1"));
+    panel.appendChild(makeSliderRow("X"));
     // Append “Rotation Y” row
-    panel.appendChild(makeSliderRow("Y", "-1", "1", "0.1"));
+    panel.appendChild(makeSliderRow("Y"));
     // Append "Offset w" row
-    panel.appendChild(makeSliderRow("W", "0", "0.25", "0.01"));
+    panel.appendChild(makeSliderRow("W"));
 
     // Finally, insert the panel into the container
     container.appendChild(panel);

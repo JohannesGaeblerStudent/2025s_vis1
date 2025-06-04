@@ -26,7 +26,7 @@ let volumeContext = null;
 
 let geometry = null;
 let mesh = null;
-let wireframe = null;
+let voxels = null;
 
 let histogram = null;
 
@@ -67,11 +67,6 @@ function readFile() {
         let size = new THREE.Vector3(volume.width, volume.height, volume.depth).normalize();
         geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
         mesh = new THREE.Mesh(geometry);
-
-        wireframe = new THREE.LineSegments(
-            new THREE.EdgesGeometry(new THREE.BoxGeometry(volume.width, volume.height, volume.depth)),
-            new THREE.LineBasicMaterial({color: new THREE.Color(0, 1, 0)})
-        );
 
         window.resetVis();
     };
@@ -131,6 +126,61 @@ window.createVolumeShader = async function() {
     requestAnimationFrame(paint);
 }
 
+window.buildFilteredPoints = async function() {
+    if(!histogram) {return;}
+    console.log("buildFilteredPoints");
+    if(window.clipSide === 2){
+        histogram.updateData(volume.voxels);
+        return;
+    }
+    const angX = window.angleX;
+    const angY = window.angleY;
+    const side = window.clipSide;
+    const w = window.clipOffset;
+
+    const nx = volume.width;
+    const ny = volume.height;
+    const nz = volume.depth;
+
+    const flip = side < 0 ? -1 : 1;
+
+    // Compute plane‐normal n = Ry(angY)·Rx(angX)·[0,0,1]
+    const cosX = Math.cos(angX), sinX = Math.sin(angX);
+    const cosY = Math.cos(angY), sinY = Math.sin(angY);
+    // After Rx: v1 = [0, −sinX, cosX]
+    // After Ry(v1): n = [ sinY·cosX, −sinX, cosY·cosX ]
+    const nx_ =  sinY * cosX;
+    const ny_ = -sinX;
+    const nz_ =  cosY * cosX;
+    const d   = -w;  // plane: n·p + d = 0
+
+    const out = [];
+    let idx = 0;
+
+    // Loop over every voxel index (i,j,k)
+    for (let k = 0; k < nz; k++) {
+        // If your volume is centered in [−1,+1], convert k → zk accordingly:
+        const zk = (k / (nz - 1)) * 2 - 1;
+        for (let j = 0; j < ny; j++) {
+            const yj = (j / (ny - 1)) * 2 - 1;
+            for (let i = 0; i < nx; i++) {
+                const xi = (i / (nx - 1)) * 2 - 1;
+                const intensity = volume.voxels[idx++];  // the Float32 value in [0,1]
+
+                // Compute side = n·p + d
+                const side = nx_ * xi + ny_ * yj + nz_ * zk + d;
+
+                // If flip < 0, keep points with side ≥ 0; else keep side ≤ 0
+                if ((flip < 0 && side >= 0) || (flip > 0 && side <= 0)) {
+                    // Only push the point if it survives the plane test
+                    out.push(intensity);
+                }
+            }
+        }
+    }
+    histogram.updateData(out);
+}
+
 /**
  * Construct the THREE.js scene and update histogram when a new volume is loaded.
  */
@@ -155,7 +205,7 @@ async function resetVis() {
         if (!histogram) {
             histogram = new Histogram('#histogramContainer', volume.voxels);
         } else {
-            histogram.updateData(volume.voxels);
+            histogram.updateData(voxels);
         }
 
         histogram.render();
