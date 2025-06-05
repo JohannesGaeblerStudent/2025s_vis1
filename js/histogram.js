@@ -1,12 +1,12 @@
-function Histogram(containerSelector, data, volumeContext) {
+window.selectors = []
+
+function Histogram(containerSelector, data) {
     this.selector = containerSelector;
     this.data = data;
     this.width = 600;
     this.height = 800;
     this.margin = { top: 20, right: 20, bottom: 400, left: 60 };
     this.binCount = 100;
-
-    this.selectors = [];
 
     this.svg = null;
     this.g = null;
@@ -18,7 +18,7 @@ function Histogram(containerSelector, data, volumeContext) {
             paint();
         },
         (deletedSelector) => {
-            this.selectors = this.selectors.filter(s => s !== deletedSelector);
+            window.selectors = window.selectors.filter(s => s !== deletedSelector);
             this.resetColorSteps();
             this.setColorSteps();
             this.render();
@@ -110,11 +110,11 @@ function Histogram(containerSelector, data, volumeContext) {
             .lower()
             .on("click", (event, d) => {
                 const index = bins.findIndex(b => b.x0 === d.x0);
-                if (this.selectors.length === 10) {
+                if (window.selectors.length === 10) {
                     window.alert('Only 10 selectors allowed');
                 }
-                else if (!this.selectors.find(s => s.index === index)) {
-                    this.selectors.push({ index, color: '#ffffff', opacity: 1.0 });
+                else if (!window.selectors.find(s => s.index === index)) {
+                    window.selectors.push({ index, color: '#ffffff', opacity: 1.0 });
                     this.setColorSteps();
                     this.render();
                     paint();
@@ -143,7 +143,7 @@ function Histogram(containerSelector, data, volumeContext) {
         this.g.selectAll(".selector-group").remove();
 
         const selectorGroups = this.g.selectAll(".selector-group")
-            .data(this.selectors)
+            .data(window.selectors)
             .enter()
             .append("g")
             .attr("class", "selector-group")
@@ -194,21 +194,20 @@ function Histogram(containerSelector, data, volumeContext) {
 
     this.updateData = function (newData) {
         this.data = newData;
-        this.selectors = [];
         this.render();
     };
 
     this.setColorSteps = function () {
         let i = 0;
-        for (let selector of this.selectors.sort((a, b) => b.index - a.index)) {
-            volumeContext.setColorStep(i, selector.index / 100, hexToRgb(selector.color), selector.opacity);
+        for (let selector of window.selectors.sort((a, b) => b.index - a.index)) {
+            window.volumeContext.setColorStep(i, selector.index / 100, hexToRgb(selector.color), selector.opacity);
             i++;
         }
     };
 
     this.resetColorSteps = function () {
         for (let i = 0; i < 9; i++) {
-            volumeContext.setColorStep(i, 1.0, new THREE.Vector4(), 0.0);
+            window.volumeContext.setColorStep(i, 1.0, new THREE.Vector4(), 0.0);
         }
     }
 }

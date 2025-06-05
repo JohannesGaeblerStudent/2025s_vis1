@@ -37,21 +37,15 @@ float sampleData(vec3 coord) {
 }
 
 vec4 sampleColor(float density) {
+  // Note: Color steps must be ordered 0->1 in
+  // order for this to sample the correct color!
+  // TODO: Would be pretty easy to do a gradient here
   for (int i = COLOR_MAX_COUNT - 1; i >= 0; i--) {
     float thr = colorDefinitionsDensity[i];
-    if (thr < 0.0) continue; // Skip unused entries
-
-    float upperThr = 1.0;
-    if (i < COLOR_MAX_COUNT - 1 && colorDefinitionsDensity[i + 1] >= 0.0) {
-      upperThr = colorDefinitionsDensity[i + 1];
-    }
-
-    if (density >= thr && density < upperThr) {
+    if (thr >= 0.0 && density >= thr) {
       return colorDefinitionsColor[i];
     }
   }
-
-  // Below all thresholds
   return offColor;
 }
 

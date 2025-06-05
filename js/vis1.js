@@ -22,7 +22,7 @@ let fileInput = null;
 
 let volumeTexture = null;
 let volumeShader = null;
-let volumeContext = null;
+window.volumeContext = null;
 
 let geometry = null;
 let mesh = null;
@@ -110,14 +110,19 @@ window.createVolumeShader = async function() {
         //Cutting Plane
         new THREE.Vector4(window.angleX, window.angleY, window.clipSide, window.clipOffset),
     );
+
     await volumeShader.load();
-    volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
 
-    //volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
-    // ====================================
+    window.volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
+    let i = 0;
+    for (let selector of window.selectors.sort((a, b) => b.index - a.index)) {
+        window.volumeContext.setColorStep(i, selector.index / 100, hexToRgb(selector.color), selector.opacity);
+        i++;
+    }
+    window.volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
 
-    mesh.material = volumeContext.material;
-    requestAnimationFrame(paint);
+    mesh.material = window.volumeContext.material;
+    paint();
 }
 
 window.buildFilteredPoints = async function() {
@@ -196,7 +201,7 @@ async function resetVis() {
     // Update histogram when new volume is loaded
     if (volume && volume.voxels) {
         if (!histogram) {
-            histogram = new Histogram('#histogramContainer', volume.voxels, volumeContext);
+            histogram = new Histogram('#histogramContainer', volume.voxels);
         } else {
             histogram.updateData(voxels);
         }
