@@ -20,7 +20,7 @@ body {
 
 #tfContainer{
     flex: 1;
-    margin:5em;
+    margin-right: 5em;
 }
 
 .dot{
