@@ -113,10 +113,7 @@ window.createVolumeShader = async function() {
     await volumeShader.load();
     volumeContext = new VolumeContext(volumeTexture, volume, volumeShader);
 
-    // TODO: Remove this once the UI works:
-    volumeContext.setDensityThreshold(0.1, 1.0);
-
-    volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
+    //volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
     // ====================================
 
     mesh.material = volumeContext.material;
@@ -125,7 +122,6 @@ window.createVolumeShader = async function() {
 
 window.buildFilteredPoints = async function() {
     if(!histogram) {return;}
-    console.log("buildFilteredPoints");
     if(window.clipSide === 2){
         histogram.updateData(volume.voxels);
         return;
