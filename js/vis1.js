@@ -68,7 +68,7 @@ function readFile() {
         geometry = new THREE.BoxGeometry(size.x, size.y, size.z);
         mesh = new THREE.Mesh(geometry);
 
-        window.resetVis();
+        resetVis();
     };
     reader.readAsArrayBuffer(fileInput.files[0]);
 }
@@ -203,7 +203,7 @@ async function resetVis() {
         if (!histogram) {
             histogram = new Histogram('#histogramContainer', volume.voxels);
         } else {
-            histogram.updateData(voxels);
+            histogram.resetData(volume.voxels);
         }
 
         histogram.render();

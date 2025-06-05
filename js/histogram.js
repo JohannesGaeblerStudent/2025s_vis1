@@ -197,6 +197,12 @@ function Histogram(containerSelector, data) {
         this.render();
     };
 
+    this.resetData = function (newData) {
+        this.data = newData;
+        window.selectors = [];
+        this.render();
+    };
+
     this.setColorSteps = function () {
         let i = 0;
         for (let selector of window.selectors.sort((a, b) => b.index - a.index)) {
