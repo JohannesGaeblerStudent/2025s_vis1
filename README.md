@@ -3,7 +3,12 @@
 Load one of the provided volume files through the GUI. 
 Rotate the orbit camera around the bounding box using the left mouse button. Zoom using the scroll wheel. 
 
-**TODO: complete this section!** (how to use the editor etc.)
+### Transfer Function:
+You can add a new color selector by clicking on one of the histograms bars.
+To change the intensity or density represented by a selector, drag the circle around in the histogram.
+If you click on a circle, a little menu will open where you can select the color or delete the selector.
+To close the menu, press the 'Close'-Button.
+A maximum of 10 selectors is allowed, then a pop-up will tell the user they reached the limit.
 
 ## Framework Description
 
