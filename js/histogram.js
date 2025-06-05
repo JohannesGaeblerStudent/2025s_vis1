@@ -200,6 +200,7 @@ function Histogram(containerSelector, data) {
     this.resetData = function (newData) {
         this.data = newData;
         window.selectors = [];
+        this.resetColorSteps();
         this.render();
     };
 
