@@ -15,10 +15,12 @@ body {
 
 #viewContainer{
     flex: 2;
+    width: 50em;
 }
 
 #tfContainer{
     flex: 1;
+    margin:5em;
 }
 
 .dot{
