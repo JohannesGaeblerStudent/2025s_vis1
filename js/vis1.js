@@ -119,10 +119,7 @@ async function createVolumeShader(){
 
     // TODO: Remove this once the UI works:
     volumeContext.setDensityThreshold(0.1, 1.0);
-    for (let i = 0; i <= 10; i++) {
-        const step = i / 10;
-        volumeContext.setColorStep(i, step, new THREE.Color(step, 1.0 / step, 1.0 - step));
-    }
+
     volumeContext.setOffColor(new THREE.Color(0.1, 0.1, 0.1))
     // ====================================
 
@@ -159,7 +156,7 @@ async function resetVis(){
     // Update histogram when new volume is loaded
     if (volume && volume.voxels) {
         if (!histogram) {
-            histogram = new Histogram('#histogramContainer', volume.voxels);
+            histogram = new Histogram('#histogramContainer', volume.voxels, volumeContext);
         } else {
             histogram.updateData(volume.voxels);
         }

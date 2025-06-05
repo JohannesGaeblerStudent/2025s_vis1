@@ -1,4 +1,4 @@
-function Histogram(containerSelector, data) {
+function Histogram(containerSelector, data, volumeContext) {
     this.selector = containerSelector;
     this.data = data;
     this.width = 600;
@@ -6,8 +6,25 @@ function Histogram(containerSelector, data) {
     this.margin = { top: 20, right: 20, bottom: 400, left: 60 };
     this.binCount = 100;
 
+    this.selectors = [];
+
     this.svg = null;
     this.g = null;
+
+    const picker = new PickerPanel(
+        (updatedSelector) => {
+            this.setColorSteps();
+            this.render();
+            paint();
+        },
+        (deletedSelector) => {
+            this.selectors = this.selectors.filter(s => s !== deletedSelector);
+            this.resetColorSteps();
+            this.setColorSteps();
+            this.render();
+            paint();
+        }
+    );
 
     this.render = function () {
         const total = this.data.length;
@@ -31,6 +48,7 @@ function Histogram(containerSelector, data) {
 
         const innerWidth = this.width - this.margin.left - this.margin.right;
         const innerHeight = this.height - this.margin.top - this.margin.bottom;
+        const barYBase = y(0);
 
         if (!this.svg) {
             this.svg = d3.select(this.selector)
@@ -65,8 +83,6 @@ function Histogram(containerSelector, data) {
         const bars = this.g.selectAll("rect")
             .data(bins, d => d.x0);
 
-        const barYBase = y(0);
-
         // Exit
         bars.exit()
             .transition()
@@ -92,9 +108,24 @@ function Histogram(containerSelector, data) {
             .attr("height", 0)
             .attr("fill", "#888")
             .lower()
+            .on("click", (event, d) => {
+                const index = bins.findIndex(b => b.x0 === d.x0);
+                if (this.selectors.length === 10) {
+                    window.alert('Only 10 selectors allowed');
+                }
+                else if (!this.selectors.find(s => s.index === index)) {
+                    this.selectors.push({ index, color: '#ffffff', opacity: 1.0 });
+                    this.setColorSteps();
+                    this.render();
+                    paint();
+                }
+            })
             .transition()
             .duration(600)
             .attr("height", d => Math.abs(y(d.density) - barYBase));
+
+        this.g.selectAll(".x-axis").remove();
+        this.g.selectAll(".y-axis").remove();
 
         this.g.append("g")
             .attr("class", "x-axis")
@@ -108,10 +139,86 @@ function Histogram(containerSelector, data) {
                     .domain([0, 1])
                     .range([innerHeight, 0])
             ).ticks(10));
+
+        this.g.selectAll(".selector-group").remove();
+
+        const selectorGroups = this.g.selectAll(".selector-group")
+            .data(this.selectors)
+            .enter()
+            .append("g")
+            .attr("class", "selector-group")
+            .call(d3.drag()
+                .on("drag", (event, d) => {
+                    // X-axis = density
+                    const stepWidth = x(bins[1].x0) - x(bins[0].x0);
+                    const newIndex = Math.round(event.x / stepWidth);
+                    d.index = Math.max(0, Math.min(bins.length - 1, newIndex));
+
+                    // Y-axis = opacity
+                    const clampedY = Math.max(0, Math.min(innerHeight, event.y));
+                    const newOpacity = 1.0 - (clampedY / innerHeight);
+                    d.opacity = Math.max(0, Math.min(1, newOpacity));
+
+                    this.setColorSteps();
+                    this.render();
+                    paint();
+                }));
+
+        selectorGroups.append("circle")
+            .attr("r", 8)
+            .attr("fill", d => d.color)
+            .attr("fill-opacity", 1)
+            .attr("cx", d => (x(bins[d.index].x0) + x(bins[d.index].x1)) / 2)
+            .attr("cy", d => {
+                const innerHeight = this.height - this.margin.top - this.margin.bottom;
+                return innerHeight * (1 - d.opacity);
+            })
+            .style("cursor", "pointer")
+            .on("click", (event, d) => {
+                event.stopPropagation();
+                picker.show(event.pageX, event.pageY, d);
+            });
+
+        selectorGroups.append("line")
+            .attr("x1", d => (x(bins[d.index].x0) + x(bins[d.index].x1)) / 2)
+            .attr("x2", d => (x(bins[d.index].x0) + x(bins[d.index].x1)) / 2)
+            .attr("y1", innerHeight)
+            .attr("y2", d => {
+                const innerHeight = this.height - this.margin.top - this.margin.bottom;
+                return innerHeight * (1 - d.opacity);
+            })
+            .attr("stroke", d => d.color)
+            .attr("stroke-opacity", 1)
+            .attr("stroke-width", 2);
     };
 
     this.updateData = function (newData) {
         this.data = newData;
+        this.selectors = [];
         this.render();
     };
+
+    this.setColorSteps = function () {
+        let i = 0;
+        for (let selector of this.selectors.sort((a, b) => b.index - a.index)) {
+            volumeContext.setColorStep(i, selector.index / 100, hexToRgb(selector.color), selector.opacity);
+            i++;
+        }
+    };
+
+    this.resetColorSteps = function () {
+        for (let i = 0; i < 9; i++) {
+            volumeContext.setColorStep(i, 1.0, new THREE.Vector4(), 0.0);
+        }
+    }
 }
+
+function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+        r: parseInt(result[1], 16) / 255,
+        g: parseInt(result[2], 16) / 255,
+        b: parseInt(result[3], 16) / 255
+    } : null;
+}
+
